@@ -125,17 +125,24 @@
   }
   .map-card svg{width:100%; height:auto; display:block; overflow:visible;}
 
+  .map-zoom-toggle{ display:none; }
   .map-scroll-hint{ display:none; }
-  /* below this width the poster's fine print becomes unreadable if shrunk to fit —
-     render it at native size instead and let people pan/scroll to read it, same as
-     zooming into a large photo, rather than shrinking everything into illegibility */
+  /* below this width the poster's fine print becomes unreadable if shrunk to fit.
+     by default we keep the map small (fit-to-screen) so it doesn't force immediate
+     scrolling; a button lets people switch to native size + pan/scroll to read the
+     fine print, same as zooming into a large photo. */
   @media (max-width:820px){
-    .map-scroll-hint{
+    .map-zoom-toggle{
+      display:block; margin:0 auto 12px; padding:10px 22px; border-radius:20px;
+      font-family:'PT Mono', monospace; font-size:12px; text-transform:uppercase;
+      letter-spacing:.05em; background:var(--accent); color:#fff; border:none; cursor:pointer;
+    }
+    .map-scroll-hint.show{
       display:block; font-family:'PT Mono', monospace; font-size:11.5px; color:var(--ink-soft);
       text-align:center; margin:0 0 10px;
     }
-    .map-card{ overflow:auto; -webkit-overflow-scrolling:touch; padding:12px; }
-    .map-card svg{ width:1620.0px; max-width:none; }
+    .map-card.expanded{ overflow:auto; -webkit-overflow-scrolling:touch; padding:12px; }
+    .map-card.expanded svg{ width:1620.0px; max-width:none; }
   }
 
   .stats-footer{
@@ -447,8 +454,9 @@ body{
     </div>
   </header>
 
-  <p class="map-scroll-hint">← проведите пальцем по карте, чтобы рассмотреть детали →</p>
-  <div class="map-card">
+  <button type="button" id="mapZoomBtn" class="map-zoom-toggle" onclick="toggleMapZoom()">🔍 Увеличить и показать детали</button>
+  <p class="map-scroll-hint" id="mapScrollHint">← проведите пальцем по карте, чтобы рассмотреть детали →</p>
+  <div class="map-card" id="mapCard">
     <svg viewBox="0 0 1620.0 1480.3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Карта маршрута Батьковское болото на подложке OpenTopoMap">
       <defs>
         <clipPath id="mapClip"><rect x="0" y="0" width="1400.0" height="1200.3"/></clipPath>
@@ -585,8 +593,8 @@ body{
           <g transform="translate(668.3,590.8)"><path d="M-7,6 L0,-7 L7,6 Z" fill="none" stroke="var(--ink)" stroke-width="1.4" stroke-linejoin="round"/><line x1="0" y1="-7" x2="0" y2="6" stroke="var(--ink)" stroke-width="1.1"/></g>
           </g>
         <g id="wp-label-4" class="wp-label-group">
-          <rect class="lbl-bg" x="697.0" y="436.0" width="89.0" height="20" rx="3"/>
-          <text class="lbl-text" x="741.5" y="453.0" text-anchor="middle">5 · Клюква</text>
+          <rect class="lbl-bg" x="591.1" y="436.0" width="300.7" height="20" rx="3"/>
+          <text class="lbl-text" x="741.5" y="453.0" text-anchor="middle">5 · Открытая часть болота, много клюквы</text>
           </g>
           <g class="wp-pin" onclick="toggleLabel('wp-label-4')">
           <circle cx="741.5" cy="465.0" r="11" class="pin-fill"/>
@@ -660,7 +668,7 @@ body{
 
         <!-- legend -->
         <g transform="translate(20,20)">
-          <rect x="0" y="0" width="580" height="224.0" rx="4" style="fill:var(--panel)" opacity="0.92" stroke="var(--ink-faint)" stroke-width="1"/>
+          <rect x="0" y="0" width="580" height="272.0" rx="4" style="fill:var(--panel)" opacity="0.92" stroke="var(--ink-faint)" stroke-width="1"/>
           <text class="legend-title" x="18" y="24">Условные обозначения</text>
 
           <line x1="18" y1="46" x2="58" y2="46" style="stroke:var(--trail-main)" stroke-width="4.2" stroke-linecap="round"/>
@@ -686,15 +694,15 @@ body{
           <text class="legend-text" x="330.0" y="141.0">4 · Базовый лагерь</text>
           <circle cx="30.0" cy="160.0" r="10" class="pin-fill" stroke-width="1.6"/>
           <g transform="translate(30.0,160.0)"><circle cx="-3" cy="2.2" r="2.3" fill="#a1451f"/><circle cx="3" cy="2.2" r="2.3" fill="#a1451f"/><circle cx="0" cy="-3" r="2.3" fill="#a1451f"/><path d="M0,-6.5 q1.6,-1.4 3,-0.4" fill="none" stroke="#4e6b45" stroke-width="1.1"/></g>
-          <text class="legend-text" x="48.0" y="165.0">5 · Клюква</text>
-          <circle cx="312.0" cy="160.0" r="10" class="pin-fill" stroke-width="1.6"/>
-          <g transform="translate(312.0,160.0)"><circle cx="0" cy="0" r="7" fill="none" stroke="var(--ink)" stroke-width="1.2"/><circle cx="0" cy="0" r="4.3" fill="var(--water)" stroke="var(--ink)" stroke-width="1"/><circle cx="0" cy="0" r="1.7" fill="var(--ink)"/></g>
-          <text class="legend-text" x="330.0" y="165.0">6 · Памятный знак</text>
-          <circle cx="30.0" cy="184.0" r="10" class="pin-fill warn-pin" stroke-width="1.6"/>
-          <g transform="translate(30.0,184.0)"><path d="M0,-7.6 L7,6 L-7,6 Z" fill="none" stroke="var(--trail-main)" stroke-width="1.4" stroke-linejoin="round"/><line x1="0" y1="-2.6" x2="0" y2="2" stroke="var(--trail-main)" stroke-width="1.5"/><circle cx="0" cy="4" r="0.9" fill="var(--trail-main)"/></g>
-          <text class="legend-text" x="48.0" y="189.0">! · Сплавина оз. Батьковского</text>
+          <text class="legend-text" x="48.0" y="165.0">5 · Открытая часть болота, много клюквы</text>
+          <circle cx="30.0" cy="184.0" r="10" class="pin-fill" stroke-width="1.6"/>
+          <g transform="translate(30.0,184.0)"><circle cx="0" cy="0" r="7" fill="none" stroke="var(--ink)" stroke-width="1.2"/><circle cx="0" cy="0" r="4.3" fill="var(--water)" stroke="var(--ink)" stroke-width="1"/><circle cx="0" cy="0" r="1.7" fill="var(--ink)"/></g>
+          <text class="legend-text" x="48.0" y="189.0">6 · Памятный знак</text>
+          <circle cx="30.0" cy="208.0" r="10" class="pin-fill warn-pin" stroke-width="1.6"/>
+          <g transform="translate(30.0,208.0)"><path d="M0,-7.6 L7,6 L-7,6 Z" fill="none" stroke="var(--trail-main)" stroke-width="1.4" stroke-linejoin="round"/><line x1="0" y1="-2.6" x2="0" y2="2" stroke="var(--trail-main)" stroke-width="1.5"/><circle cx="0" cy="4" r="0.9" fill="var(--trail-main)"/></g>
+          <text class="legend-text" x="48.0" y="213.0">! · Сплавина оз. Батьковского</text>
 
-          <text class="legend-text" x="18" y="210.0" style="font-family:'PT Mono', monospace; font-size:11px;" opacity="0.85">Треки: nakarte.me · подложка: © OpenStreetMap contributors, SRTM, © OpenTopoMap (CC-BY-SA)</text>
+          <text class="legend-text" x="18" y="258.0" style="font-family:'PT Mono', monospace; font-size:11px;" opacity="0.85">Треки: nakarte.me · подложка: © OpenStreetMap contributors, SRTM, © OpenTopoMap (CC-BY-SA)</text>
         </g>
       </g>
     </svg>
@@ -828,6 +836,17 @@ function toggleLabel(id){
   el.classList.toggle('show');
 }
 
+function toggleMapZoom(){
+  var card = document.getElementById('mapCard');
+  var btn = document.getElementById('mapZoomBtn');
+  var hint = document.getElementById('mapScrollHint');
+  if(!card || !btn) return;
+  var expanded = card.classList.toggle('expanded');
+  if(hint) hint.classList.toggle('show', expanded);
+  btn.textContent = expanded ? '↩ Свернуть карту' : '🔍 Увеличить и показать детали';
+  if(expanded) card.scrollLeft = 0;
+}
+
 
 var osmMapInited = false;
 var map;
@@ -895,7 +914,7 @@ const wpMeta = {
   'Damb': {n:'2', icon:'dam', title:'Дамба'},
   'Forest trail': {n:'3', icon:'trail', title:'Лесная тропа'},
   'Base camp': {n:'4', icon:'camp', title:'Базовый лагерь'},
-  'Cranberry bog': {n:'5', icon:'berry', title:'Клюква'},
+  'Cranberry bog': {n:'5', icon:'berry', title:'Открытая часть болота, много клюквы'},
   'Memorial': {n:'6', icon:'eye', title:'Памятный знак'},
   'Splavina': {n:'!', icon:'warn', title:'Сплавина — плавучий торфяной мат оз. Батьковского', warn:true},
 };
